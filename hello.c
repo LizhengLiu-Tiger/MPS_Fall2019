@@ -17,11 +17,12 @@
 //------------------------------------------------------------------------------------
 #include "stm32f769xx.h"
 #include "hello.h"
-
 #include<stdint.h>
 //#include<stdbool.h>
 
 #define esc 27
+#define KRED "\x1B[31m"
+#define KYEL "\x1B[33m"
 
 
 //------------------------------------------------------------------------------------
@@ -35,7 +36,8 @@ int main(void)
 //	char in[3];
 	char char1;
 //    int size = 3;
-    int init = 1;
+    int init_1 = 1;
+    int NP_row = 9;
 
     //Initialization of GPIO example
     GPIOA->MODER |= GPIO_MODER_MODER13_0;
@@ -48,7 +50,7 @@ int main(void)
 
     printf("\033[2J\033[;H"); // Erase screen & move cursor to home position
     fflush(stdout); // Need to flush stdout after using printf that doesn't end in \n
-    printf("Test of the printf() function.\n\n");
+    //printf("Test of the printf() function.\n\n");
 
     //    __HAL_RCC_GPIOJ_CLK_ENABLE(); // Need to enable clock for peripheral bus on GPIO Port J
 
@@ -71,23 +73,32 @@ int main(void)
 
 //    volatile uint32_t * GREENLEDODR = (uint32_t*) 0x40022414U; // Address of GPIO J Output Data Register
 //    *GREENLEDODR ^= (uint16_t)0x0020U; // Toggle Green LED (LED2)
-
-    while(init)
+    printf("                       TEST1:  enter < esc > or < ctrl[ > to quit!\r");
+    while(init_1)
     {
-    	printf("test3:Hello World! This is Lab1 task1\r\n");
-    	printf("Enter a character from the keyboard to start! And enter < esc > or < ctrl[ > to stop!\r\n");
+    	//printf("test4:Hello World! This is Lab1 task1\r\n");
 
     	char1 = getchar();
 
     	if (char1 == esc)
     	{
     		printf("\r\nThis round is end. Please restart.\r\n");
-    		init = 0;
+    		init_1 = 0;
+    	}
+    	else if ((char1 < 32)||(char1 > 126))
+    	{
+    		printf ( "\033[%d;1H",NP_row);
+    		printf("\r\033[33;5mThis is a \e[4mnon-printable\e[0m \033[33;5mcharacter: $%x.\033[0m\r\007",char1);
+    		//printf("\rThis is a %s/* non-printable */%s character: $%x.\r", tgetstr("us",NULL),tgetstr("ue",NULL),char1);
+    		fflush(stdout);
+    		NP_row ++;
     	}
     	else
     	{
-    		printf("The keyboard character is %c.\r\n\n", char1);
-    		init = 1;
+    		printf ( "\033[6;1H");
+    		printf("\rThe keyboard character is %s%c%s.\r", KRED, char1, KYEL);
+    		fflush(stdout);
+    		init_1 = 1;
     	}
 
     }
