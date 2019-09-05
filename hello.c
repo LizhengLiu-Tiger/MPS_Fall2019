@@ -73,14 +73,17 @@ int main(void)
 
 //    volatile uint32_t * GREENLEDODR = (uint32_t*) 0x40022414U; // Address of GPIO J Output Data Register
 //    *GREENLEDODR ^= (uint16_t)0x0020U; // Toggle Green LED (LED2)
-    printf("                       TEST1:  enter < esc > or < ctrl[ > to quit!\r");
+    printf("                  TEST2:  enter < esc > or < ctrl[ > to quit!\r");
+    printf ( "\033[9;1H");
+    printf("\033[s");
 
     while(init_1)
     {
     	//printf("test4:Hello World! This is Lab1 task1\r\n");
-
     	char1 = getchar();
-    	printf ("\033[?4l");
+    	//printf ("\033[?4l");
+    	printf ("\033[9;20r");
+
     	if (char1 == esc)
     	{
 			printf ("\033[r");
@@ -89,9 +92,10 @@ int main(void)
     	}
     	else if ((char1 < 32)||(char1 > 126))
     	{
-    		printf ("\033D");
-    		printf ( "\033[%d;1H",NP_row);
-    		printf("\r\033[33;5mThis is a \e[4mnon-printable\e[0m \033[33;5mcharacter: $%x.\033[0m\r\007",char1);
+    		//printf ("\033D");
+    		printf ( "\033[u");
+    		printf("\r\033[33;5mThis is a \e[4mnon-printable\e[0m \033[33;5mcharacter: $%x.\n\033[0m\r\007",char1);
+    		printf ( "\033[s");
     		//printf("\rThis is a %s/* non-printable */%s character: $%x.\r", tgetstr("us",NULL),tgetstr("ue",NULL),char1);
     		fflush(stdout);
     		NP_row ++;
