@@ -38,75 +38,137 @@ int main(void)
 //    int size = 3;
     int init_1 = 1;
     int NP_row = 9;
-
-    //Initialization of GPIO example
-    GPIOA->MODER |= GPIO_MODER_MODER13_0;
-    ADC1->CR1 &= ~ADC_CR1_DISCNUM_0;
-    GPIO_InitTypeDef gpio_init;
-
-    gpio_init.Pin = GPIO_PIN_6;
-    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
-    HAL_GPIO_Init(GPIOA, &gpio_init);
+    int D0 = 0;
+    int D1 = 0;
+    int D2 = 0;
+    int D3 = 0;
 
     printf("\033[2J\033[;H"); // Erase screen & move cursor to home position
     fflush(stdout); // Need to flush stdout after using printf that doesn't end in \n
-    //printf("Test of the printf() function.\n\n");
 
-    //    __HAL_RCC_GPIOJ_CLK_ENABLE(); // Need to enable clock for peripheral bus on GPIO Port J
+    __HAL_RCC_GPIOJ_CLK_ENABLE(); // Need to enable clock for peripheral bus on GPIO Port J, A, D
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOF_CLK_ENABLE();
 
-    volatile uint32_t * RCC_AHB1_CLOCK_ENABLE = (uint32_t*) 0x40023830U; // Enable clock for peripheral bus on GPIO Port J
-    *RCC_AHB1_CLOCK_ENABLE |= 512U; // Bitmask for RCC AHB1 initialization: 0x00000200U or 512U in decimal
+    GPIO_InitTypeDef gpio_init;
+    gpio_init.Pin = GPIO_PIN_13 | GPIO_PIN_5;//GPIO outputs
+    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init.Pull = GPIO_PULLUP;
+    gpio_init.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(GPIOJ, &gpio_init);
 
-    GPIOJ->MODER |= 1024U; //Bitmask for GPIO J Pin 5 initialization (set it to Output mode): 0x00000400U or 1024U in decimal
-    GPIOJ->BSRR = (uint16_t)GPIO_PIN_5; // Turn on Green LED (LED2)
-    GPIOJ->BSRR = (uint32_t)GPIO_PIN_5 << 16; // Turn off Green LED (LED2)
-    GPIOJ->ODR ^= (uint16_t)GPIO_PIN_5; // Toggle LED2
+    gpio_init.Pin = GPIO_PIN_12;
+    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init.Pull = GPIO_PULLUP;
+    gpio_init.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(GPIOA, &gpio_init);
+
+    gpio_init.Pin = GPIO_PIN_4;
+    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init.Pull = GPIO_PULLUP;
+    gpio_init.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(GPIOD, &gpio_init);
+
+    gpio_init.Pin = GPIO_PIN_6 | GPIO_PIN_7;//GPIO inputs
+    gpio_init.Mode = GPIO_MODE_INPUT;
+    gpio_init.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOC, &gpio_init);
+
+    gpio_init.Pin = GPIO_PIN_1;
+    gpio_init.Mode = GPIO_MODE_INPUT;
+    gpio_init.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOJ, &gpio_init);
+
+    gpio_init.Pin = GPIO_PIN_6;
+    gpio_init.Mode = GPIO_MODE_INPUT;
+    gpio_init.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOF, &gpio_init);
+
+    HAL_GPIO_WritePin(GPIOJ, GPIO_PIN_13 | GPIO_PIN_5, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+
+    D0 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
+    D1 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6);
+    D2 = HAL_GPIO_ReadPin(GPIOJ, GPIO_PIN_1);
+    D3 = HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6);
+//
+//    volatile uint32_t * RCC_AHB1_CLOCK_ENABLE = (uint32_t*) 0x40023830U; // Enable clock for peripheral bus on GPIO Port J
+//    *RCC_AHB1_CLOCK_ENABLE |= 512U; // Bitmask for RCC AHB1 initialization: 0x00000200U or 512U in decimal
+//
+//    volatile uint32_t * RCC_AHB1_CLOCK_ENABLE_1 = (uint32_t*) 0x40023830U; // Enable clock for peripheral bus on GPIO Port A
+//    *RCC_AHB1_CLOCK_ENABLE_1 |= 1U; // Bitmask for RCC AHB1 initialization: 0x00000200U or 512U in decimal
+//
+//    volatile uint32_t * RCC_AHB1_CLOCK_ENABLE_2 = (uint32_t*) 0x40023830U; // Enable clock for peripheral bus on GPIO Port D
+//    *RCC_AHB1_CLOCK_ENABLE_2 |= 8U; // Bitmask for RCC AHB1 initialization: 0x00000200U or 512U in decimal
+//
+//    GPIOJ->MODER |= 1024U; //Bitmask for GPIO J Pin 5 initialization (set it to Output mode): 0x00000400U or 1024U in decimal
+//    GPIOJ->BSRR = (uint16_t)GPIO_PIN_5; // Turn on Green LED (LED2)
+//
+//    GPIOJ->MODER |= 67108864U; //Bitmask for GPIO J Pin 13 initialization (set it to Output mode): 0x00000400U or 1024U in decimal
+//    GPIOJ->BSRR = (uint16_t)GPIO_PIN_13; // Turn on (LED1)
+//
+//    GPIOA->MODER |= 16777216U; //Bitmask for GPIO A Pin 12 initialization (set it to Output mode): 0x00000400U or 1024U in decimal
+//    GPIOA->BSRR = (uint16_t)GPIO_PIN_12; // Turn on (LED3)
+//
+//    GPIOD->MODER |= 256U; //Bitmask for GPIO D Pin 4 initialization (set it to Output mode): 0x00000400U or 1024U in decimal
+//    GPIOD->BSRR = (uint32_t)GPIO_PIN_4 << 16; // Turn on  (LED4)
+    //GPIOJ->BSRR = (uint32_t)GPIO_PIN_5 << 16; // Turn off Green LED (LED2)
+    //GPIOJ->ODR ^= (uint16_t)GPIO_PIN_5; // Toggle LED2
+
+
 
 // It doesn't get lower level than this!
 //    volatile uint32_t * GREENLEDMODER = (uint32_t*) 0x40022400U; // Init GPIO J Pin 5 (LED2 with no Alt. func.) to Output
 //    *GREENLEDMODER |= 1024U; // Bitmask for GPIO J Pin 5 initialization: 0x00000400U or 1024U in decimal
 
-    volatile uint32_t * GREENLEDBSRR = (uint32_t*) 0x40022418U; // Address of GPIO J Bit Set/Reset Register
-    *GREENLEDBSRR = (uint16_t)0x0020U; // Turn on Green LED (LED2)
+    //volatile uint32_t * GREENLEDBSRR = (uint32_t*) 0x40022418U; // Address of GPIO J Bit Set/Reset Register
+    //*GREENLEDBSRR = (uint16_t)0x0020U; // Turn on Green LED (LED2)
 
     HAL_Delay(1000); // Pause for a second
 
 //    volatile uint32_t * GREENLEDODR = (uint32_t*) 0x40022414U; // Address of GPIO J Output Data Register
 //    *GREENLEDODR ^= (uint16_t)0x0020U; // Toggle Green LED (LED2)
-    printf("                  TEST2:  enter < esc > or < ctrl[ > to quit!\r");
+    printf("                  TEST2:  enter < esc > or < ctrl[ > to quit!\r\n");
     printf ( "\033[9;1H");
     printf("\033[s");
 
     while(init_1)
     {
-    	//printf("test4:Hello World! This is Lab1 task1\r\n");
-    	char1 = getchar();
-    	//printf ("\033[?4l");
-    	printf ("\033[9;20r");
 
-    	if (char1 == esc)
-    	{
-			printf ("\033[r");
-			printf("\r\nThis round is end. Please restart.\r\n");
-			init_1 = 0;
-    	}
-    	else if ((char1 < 32)||(char1 > 126))
-    	{
-    		//printf ("\033D");
-    		printf ( "\033[u");
-    		printf("\r\033[33;5mThis is a \e[4mnon-printable\e[0m \033[33;5mcharacter: $%x.\n\033[0m\r\007",char1);
-    		printf ( "\033[s");
-    		//printf("\rThis is a %s/* non-printable */%s character: $%x.\r", tgetstr("us",NULL),tgetstr("ue",NULL),char1);
-    		fflush(stdout);
-    		NP_row ++;
-    	}
-    	else
-    	{
-    		printf ( "\033[6;1H");
-    		printf("\rThe keyboard character is %s%c%s.\r", KRED, char1, KYEL);
-    		fflush(stdout);
-    		init_1 = 1;
-    	}
+		    D0 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
+		    D1 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6);
+		    D2 = HAL_GPIO_ReadPin(GPIOJ, GPIO_PIN_1);
+		    D3 = HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6);
+		    
+    	if (D0)
+    		HAL_GPIO_WritePin(GPIOJ, GPIO_PIN_13, GPIO_PIN_SET);
+    	else if (!D0)
+    		HAL_GPIO_WritePin(GPIOJ, GPIO_PIN_13, GPIO_PIN_RESET);
+    		
+    	if (D1)
+    		HAL_GPIO_WritePin(GPIOJ, GPIO_PIN_5, GPIO_PIN_SET);
+    	else if (!D1)
+    		HAL_GPIO_WritePin(GPIOJ, GPIO_PIN_5, GPIO_PIN_RESET);	
+    		
+    	if (D2)
+    		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+    	else if (!D2)
+    		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);	
+
+    	if (D3)
+    		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+    	else if (!D3)
+    		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);	
+    		
+
+		    printf("Value of D0: %d\n\r", D0);
+		    printf("Value of D1: %d\n\r", D1);
+		    printf("Value of D2: %d\n\r", D2);
+		    printf("Value of D3: %d\n\r", D3);
+		    printf("End of this turn\n\n\r");
 
     }
 
