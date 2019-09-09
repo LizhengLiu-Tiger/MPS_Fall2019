@@ -1,1 +1,33 @@
+    //FOR LED 2
+      RCC->AHB1ENR |= (1<<9);
+    //  GPIOJ->MODER &= (0<<11) ;
+      GPIOJ->MODER |= (1<<10);
+      GPIOJ->BSRR |= (1<<5);
 
+     //FOR LED 1
+    //  GPIOJ->MODER &= (0<<27);
+      GPIOJ->MODER |= (1<<26);
+      GPIOJ->BSRR |= (1<<13);
+
+      RCC->AHB1ENR |= (1<<0);
+      RCC->AHB1ENR |= (1<<3);
+
+      GPIOA->MODER &= (0<<25);
+      GPIOA->MODER |= (1<<24);
+      GPIOA->BSRR |= (1<<12);
+
+      GPIOD->MODER &= (0<<9);
+      GPIOD->MODER |= (1<<8);
+      GPIOD->BSRR &= (0<<4);
+////////////////////////////////////////
+      RCC->AHB1ENR |= (1<<2);//enable timer for c and F
+      RCC->AHB1ENR |= (1<<5);
+
+      GPIOC->MODER &= ((0<<12) && (0<<13) && (0<<14) && (0<<15));//input mode for PC6 and PC7
+      GPIOJ->MODER &= ((0<<2) && (0<<3));//PJ1
+      GPIOF->MODER &= ((0<<12) && (0<<13));
+
+      GPIOC->PUPDR  |= ((1<<12) || (1<<14));
+      GPIOJ->PUPDR  |= ((1<<2));
+      GPIOF->PUPDR  |= (1<<12);
+      printf("                  TEST2:  enter < esc > or < ctrl[ > to quit!\r\n");
