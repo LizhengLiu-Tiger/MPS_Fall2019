@@ -26,25 +26,16 @@ void Init_Timer();
 //
 // -- Code Body -------------
 //
-volatile uint8_t timeUpdated = 0;
-volatile uint8_t buttonPressed = 0;
-volatile uint8_t buttonReleased = 0;
-volatile uint32_t elapsed = 0;
 
-int32_t randomNumber = 0;
-uint32_t startTime = 0;
-float averageScore = 0;
-unsigned int iterations = 0;
-int flag_1 = 0;
-int flag_2 = 0;
-int flag_3 = 0;
-int count_ten = 0;
-int count_tenth = 0;
-float timeReact = 0;
-float total_time = 0;
-int total_trial = 0;
-int run = 0;
-int pre = 0;
+int flag_1 = 0;//C8 flag
+int flag_2 = 0;//timer 6 flag
+int flag_3 = 0;//J0 flag
+int count_tenth = 0;//0.1 sec flag
+float timeReact = 0;//real reaction time
+float total_time = 0;//totoal reaction time
+int total_trial = 0;//total trials in one round
+int run = 0;//game run flag
+int pre = 0;//problem solving flag
 
 TIM_HandleTypeDef htim7;
 
@@ -52,7 +43,7 @@ int main() {
 	Sys_Init();
 	Init_Timer();
 	Init_GPIO();
-    printf("\033[2J\r\n");
+    	printf("\033[2J\r\n");
 	printf("TEST!\r\n");
 	while (1) {
 		// Main loop code goes here
@@ -62,20 +53,21 @@ int main() {
 
 		HAL_Delay(rand()%2000 + 1000); //Delay for a random time between 1s to 3s
 		blinkScreen();
-		TIM6->CR1 = 0x0001;
+		TIM6->CR1 = 0x0001;//start the timer
 
-		while (run)
+		while (run)//game starts
 		{
-			if (pre)
+			if (pre)//clear the problem
 				flag_1 = 0;
-			if (!flag_1 && flag_3)
+			if (!flag_1 && flag_3)//end game
 			{
-				if (total_trial)
+				if (total_trial)//more than one trial should be taken, if not, print error
 					printf("\r\033[5;1HThe average reaction time is : %.1f\r\n",total_time / total_trial);
 				else
 					printf("\r\033[5;1HTry more times.                      \r\n");
 
 				printf("\r\033[6;1HRestart the game!              \r\n");
+				//clear variables
 				flag_1 = 0;
 				count_tenth = 0;
 				timeReact = 0;
@@ -86,7 +78,7 @@ int main() {
 
 				//break;
 			}
-			else if (!flag_1 && !flag_3)
+			else if (!flag_1 && !flag_3) // no action by the user
 
 			{
 				printf("\r\033[6;1HWaiting for user's reaction\r\n");
@@ -94,19 +86,17 @@ int main() {
 //				count_tenth ++;
 			}
 
-			else if (flag_1 && !flag_3)
+			else if (flag_1 && !flag_3)//user reacts to the flashing acreen
 			{
 				timeReact = (float) count_tenth / 20;//Should be divided by 10 mathematically, but the counting frequency seems to have unknown error so I just divede it by 20.
 				printf("\r\033[7;1HThe reaction time is: %.1f .\r\n", timeReact);
-				//printf("\r\033[6;1HThe reaction time is: %d .\r\n", count_tenth);
-
-
+				//do not increment if the reaction time is mistakenly 0
 				if (timeReact != 0)
 				{
 					total_trial ++;
 					total_time += timeReact;
 				}
-				//HAL_Delay(100);
+				//clear the variables
 				flag_1 = 0;
 				count_tenth = 0;
 				timeReact = 0;
@@ -119,30 +109,13 @@ int main() {
 			}
 
 		}
+		//clear all flags again
 		flag_3 = 0;
-
 		count_tenth = 0;
 		timeReact = 0;
 		run = 0;
 		TIM6->CR1 = 0x0002;
 
-//		if (flag_2)
-//		{
-//			printf("\r\033[8;1H Tenth sec have passed: %d.\r\n", count_ten);
-//			count_ten ++;
-//			flag_2 = 0;
-//		}
-//
-//		if (flag_1) //****Question about how to test the last bit only*********
-//		{
-//				printf("\r\033[5;1HPushbutton 1 is pressed   \r\n");
-//				flag_1 = 0;
-//		}
-//		else
-//			printf("\r\033[5;1HPushbutton 1 is not pressed\r\n");
-//		//blinkScreen(); // Alternatively: in some terminals, the BELL can be configured to produce
-//					   // 			a "visual bell" ... a blink.
-//		HAL_Delay(1000);
 	}
 }
 
@@ -172,7 +145,8 @@ void Init_Timer() {
 	// Enable the TIM6 interrupt.
 	// Looks like HAL hid this little gem, this register isn't mentioned in
 	//   the STM32F7 ARM Reference Manual...
-
+	
+	//Rounte NVIC to EXTI
 	NVIC->ISER[6 / 32] = (uint32_t) 1 << (6 % 32); //EXIT0
 	NVIC->ISER[54 / 32] = (uint32_t) 1 << (54 % 32); //Timer6
 
@@ -197,22 +171,15 @@ void Init_Timer() {
 	// Start the timer.
 	 TIM6->CR1 = 0x0000;
 	 //Enable Timer 7
-	 	HAL_Init();
-	 	htim7.Instance = TIM7;
-	 	htim7.Init.Prescaler = 24720;
-	 	htim7.Init.Period = 43690;
-
-
-
-
-	 	__HAL_RCC_TIM7_CLK_ENABLE();
-
-
-	 	HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
-	 	HAL_NVIC_EnableIRQ(TIM7_IRQn);
-
-	 	HAL_TIM_Base_Init(&htim7);
-	 	HAL_TIM_Base_Start_IT(&htim7);
+	 HAL_Init();
+	 htim7.Instance = TIM7;
+	 htim7.Init.Prescaler = 24720;
+	 htim7.Init.Period = 43690;
+	 __HAL_RCC_TIM7_CLK_ENABLE();
+	 HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
+	 HAL_NVIC_EnableIRQ(TIM7_IRQn);
+	 HAL_TIM_Base_Init(&htim7);
+	 HAL_TIM_Base_Start_IT(&htim7);
 }
 
 void Init_GPIO() {
@@ -257,13 +224,13 @@ void Init_GPIO() {
 	 EXTI->FTSR |= 0x00000100U;
 	 //HAL
 	 GPIO_InitTypeDef gpio_init;
-	 	gpio_init.Pin = GPIO_PIN_8;
-	 	gpio_init.Mode = GPIO_MODE_IT_RISING;
-	 	gpio_init.Pull = GPIO_PULLDOWN;
-	 	HAL_GPIO_Init(GPIOC, &gpio_init);
-
-	 	//enable the I
-	 	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+	 gpio_init.Pin = GPIO_PIN_8;
+	 gpio_init.Mode = GPIO_MODE_IT_RISING;
+	 gpio_init.Pull = GPIO_PULLDOWN;
+	 HAL_GPIO_Init(GPIOC, &gpio_init);
+	
+	 	//enable the IRQ
+	 HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
@@ -274,7 +241,6 @@ void Init_GPIO() {
 void TIM6_DAC_IRQHandler() {
 	// Clear Interrupt Bit
 	TIM6->SR &= 0x0000;
-	//printf("\rtest1111111111\r\n");
 	// Other code here:
 	flag_2 = 1;
 	count_tenth ++;
@@ -282,14 +248,10 @@ void TIM6_DAC_IRQHandler() {
 
 // Non-HAL GPIO/EXTI Handler
 void EXTI0_IRQHandler() {
-	// Clear Interrupt Bit by setting it to 1. ******Q:why clear PR firstly?**********
-
-	if ((EXTI->PR | 0x11111110U) == 0x11111111U)
-	{
-		flag_1 = 1;
-		EXTI->PR |= 0x00000001U;
-	}
-	// Other code here:
+	// Clear Interrupt Bit by setting it to 1
+	
+	EXTI->PR |= 0x00000001U;
+	flag_1 = 1;
 
 
 }
@@ -306,20 +268,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin_8){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
-	if(htim->Instance == TIM7)
-	{
-
+	if(htim->Instance == TIM7){
 	}
 		//counter_10++;
 }
 
 void EXTI9_5_IRQHandler(void) {
+	//Enable IRQ for EXTI 8
 	HAL_GPIO_EXTI_IRQHandler(8);
-
-	if(__HAL_GPIO_EXTI_GET_FLAG(EXTI_PR_PR8)	)
+	if(__HAL_GPIO_EXTI_GET_FLAG(EXTI_PR_PR8))//interrupt
 	{
 		//trigger++;
 		flag_3 = 1;
+		//clear the flag
 		__HAL_GPIO_EXTI_CLEAR_FLAG(EXTI_PR_PR8);
 	}
 
