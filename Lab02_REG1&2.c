@@ -28,32 +28,28 @@ volatile uint8_t buttonPressed = 0;
 volatile uint8_t buttonReleased = 0;
 volatile uint32_t elapsed = 0;
 
-int32_t randomNumber = 0;
-uint32_t startTime = 0;
-float averageScore = 0;
-unsigned int iterations = 0;
-int flag_1 = 0;
-int flag_2 = 0;
-int count_ten = 0;
-int trigger = 0;
+int flag_1 = 0;//EXTI0 flag
+int flag_2 = 0;//timer 6 flag
+int count_ten = 0;//increment every 10 sec
+int trigger = 0;//EXTI8 flag
 
 int main() {
 	Sys_Init();
 	Init_Timer();
 	Init_GPIO();
-    printf("\033[2J\r\n");
+   	printf("\033[2J\r\n");
 	printf("TEST!\r\n");
 	while (1) {
 		// Main loop code goes here
 		//printf("\033c\033[36m\033[2J");
-		if (flag_2)
+		if (flag_2) //if 10 sec has passed
 		{
 			printf("\r\033[8;1H Tenth sec have passed: %d.\r\n", count_ten);
 			count_ten ++;
 			flag_2 = 0;
 		}
 
-		if (trigger)
+		if (trigger)//if C8 is rising edge
 		{
 			printf("\r\033[6;1HPushbutton 2 is pressed   \r\n");
 			trigger = 0;
@@ -61,15 +57,13 @@ int main() {
 		else
 			printf("\r\033[6;1HPushbutton 2 is not pressed\r\n");
 
-		if (flag_1) //****Question about how to test the last bit only*********
+		if (flag_1) //if J0 is falling edge
 		{
 				printf("\r\033[5;1HPushbutton 1 is pressed   \r\n");
 				flag_1 = 0;
 		}
 		else
 			printf("\r\033[5;1HPushbutton 1 is not pressed\r\n");
-		//blinkScreen(); // Alternatively: in some terminals, the BELL can be configured to produce
-					   // 			a "visual bell" ... a blink.
 		HAL_Delay(1000);
 	}
 }
@@ -123,22 +117,6 @@ void Init_Timer() {
 	// Start the timer.
 	 TIM6->CR1 = 0x0001;
 
-//	 HAL_Init();
-//	 	htim7.Instance = TIM7;
-//	 	htim7.Init.Prescaler = 24720;
-//	 	htim7.Init.Period = 43690;
-//
-//
-//
-//
-//	 	__HAL_RCC_TIM7_CLK_ENABLE();
-//
-//
-//	 	HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
-//	 	HAL_NVIC_EnableIRQ(TIM7_IRQn);
-//
-//	 	HAL_TIM_Base_Init(&htim7);
-//	 	HAL_TIM_Base_Start_IT(&htim7);
 
 }
 
@@ -184,13 +162,13 @@ void Init_GPIO() {
 	 EXTI->FTSR |= 0x00000100U;
 
 	 GPIO_InitTypeDef gpio_init;
-	 	gpio_init.Pin = GPIO_PIN_8;
-	 	gpio_init.Mode = GPIO_MODE_IT_RISING;
-	 	gpio_init.Pull = GPIO_PULLDOWN;
-	 	HAL_GPIO_Init(GPIOC, &gpio_init);
+	 gpio_init.Pin = GPIO_PIN_8;
+	 gpio_init.Mode = GPIO_MODE_IT_RISING;
+	 gpio_init.Pull = GPIO_PULLDOWN;
+	 HAL_GPIO_Init(GPIOC, &gpio_init);
 
-	 	//enable the I
-	 	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+	 //enable the IRQ
+	 HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
@@ -201,7 +179,6 @@ void Init_GPIO() {
 void TIM6_DAC_IRQHandler() {
 	// Clear Interrupt Bit
 	TIM6->SR &= 0x0000;
-	//printf("\rtest1111111111\r\n");
 	// Other code here:
 	flag_2 = 1;
 }
@@ -209,25 +186,21 @@ void TIM6_DAC_IRQHandler() {
 // Non-HAL GPIO/EXTI Handler
 void EXTI0_IRQHandler() {
 	// Clear Interrupt Bit by setting it to 1. ******Q:why clear PR firstly?**********
-
-	if ((EXTI->PR | 0x11111110U) == 0x11111111U)
-	{
-		flag_1 = 1;
-		EXTI->PR |= 0x00000001U;
-	}
+		
+	EXTI->PR |= 0x00000001U;
 	// Other code here:
-
+	flag_1 = 1;
 
 }
 
 //HAL - GPIO/EXTI Handler
 void EXTI9_5_IRQHandler(void) {
+	//point to IRQ of EXTI8
 	HAL_GPIO_EXTI_IRQHandler(8);
-
-	if(__HAL_GPIO_EXTI_GET_FLAG(EXTI_PR_PR8)	)
+	if(__HAL_GPIO_EXTI_GET_FLAG(EXTI_PR_PR8)	)//if interrupt flag is true
 	{
-		trigger = 1;
-		__HAL_GPIO_EXTI_CLEAR_FLAG(EXTI_PR_PR8);
+		trigger = 1;//set global flag
+		__HAL_GPIO_EXTI_CLEAR_FLAG(EXTI_PR_PR8);//clear 
 	}
 
 
