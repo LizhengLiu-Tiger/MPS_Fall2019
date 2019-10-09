@@ -293,7 +293,7 @@ int main(void)
 				if(input_1[0] == 27) break;
 			}
 
-			/* Char input
+			/* Char transfer from the master to the slave
 			 *
 			 */
 			input_char = input_1[0];
@@ -319,6 +319,9 @@ int main(void)
 
 		else
 		{
+			/* Char receive by the master, from the slave
+			 *
+			 */
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
 			HAL_SPI_Transmit(&hspi_2, &addr_state, 1, HAL_MAX_DELAY);//read the 6,7, # of things in buffer
 			for(int i_3 = 0;i_3<2160;i_3++){
