@@ -18,6 +18,14 @@ ADC_HandleTypeDef adc3;
 TIM_HandleTypeDef htim7;
 
 int flag_tim6;
+int f_adc1;
+int f_adc3;
+uint16_t raw_adc1;
+uint16_t raw_adc3;
+uint16_t x_t[5];
+uint16_t y_t[5];
+uint16_t tempx;
+uint16_t tempy;
 
 int main (void)
 {
@@ -28,8 +36,10 @@ int main (void)
 	configureADC();
 	configureDAC();
 	Init_Timer();
-	printf("\r\033[2J\033[1;1HLab4-5!\r\n");
+	printf("\r\033[2J\033[1;1HLab4-5---------------------------------!\r\n");
+	while(1){
 
+	}
 
 
 }
@@ -58,6 +68,8 @@ void configureADC()
 	RCC->APB2ENR |= RCC_APB2ENR_ADC3EN;
 
 	NVIC->ISER[18 / 32] = (uint32_t) 1 << (18 % 32); //ADC Global, priority 25
+ 	HAL_NVIC_EnableIRQ(ADC_IRQn); // Enable IRQ
+ 	HAL_NVIC_SetPriority(ADC_IRQn, 1, 1);
 
 	//ADC_HandleTypeDef adc1;
 	adc1.Instance = ADC1;
@@ -121,13 +133,13 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 	__GPIOC_CLK_ENABLE();
 	__GPIOF_CLK_ENABLE();
 
-	GPIO_InitStruct.Pin       = GPIO_PIN_10; //Analog input ADC1IN6
+	GPIO_InitStruct.Pin       = GPIO_PIN_10; //Analog input ADC3IN8
 	GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull      = GPIO_PULLUP;
 	GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
 	HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin       = GPIO_PIN_6; //Analog input ADC3IN8
+	GPIO_InitStruct.Pin       = GPIO_PIN_6; //Analog input ADC1IN6
 	GPIO_InitStruct.Mode      = GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull      = GPIO_PULLUP;
 	GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
@@ -175,13 +187,51 @@ void ADC_IRQHandler(void)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-	if (hadc == &adc1)
+	if (hadc->Instance == ADC1)
 	{
-		//adc1 filter code
+		//adc1 value
+		printf("\r\n111\r\n");
+		f_adc1 = 1;
+		raw_adc1 = HAL_ADC_GetValue(&adc1);
+		//__HAL_ADC_CLEAR_FLAG(&adc1, ADC_SR_EOC);
+//		HAL_ADC_Stop_IT(&adc1);
 	}
-	if (hadc == &adc3)
+	if (hadc->Instance == ADC3)
 	{
-		//adc2 filer code
+		//adc2 value
+		printf("\r\n333\r\n");
+		f_adc3 = 1;
+		raw_adc3 = HAL_ADC_GetValue(&adc3);
+		//__HAL_ADC_CLEAR_FLAG(&adc3, ADC_SR_EOC);
+//		HAL_ADC_Stop_IT(&adc3);
+	}
+	if (f_adc1 && f_adc3)
+	{
+		//multiply
+		f_adc1 = 0;
+		f_adc3 = 0;
+		tempx = x_t[3];
+		x_t[3] = x_t[2];
+		x_t[2] = x_t[1];
+		x_t[1] = x_t[0];
+		x_t[4] = tempx;
+
+		x_t[0] = (raw_adc1-620) * (raw_adc3-620);
+		//filter code
+		tempy = y_t[3];
+		y_t[3] = y_t[2];
+		y_t[2] = y_t[1];
+		y_t[1] = y_t[0];
+		y_t[4] = tempy;
+
+		y_t[0] = 0.001*x_t[0] - 0.002*x_t[2] + 0.001*x_t[4] + 3.166*y_t[1] - 4.418*y_t[2] + 3.028*y_t[3] - 0.915*y_t[4];
+		 //DAC
+		HAL_DAC_Init(&__hdac);
+		HAL_DAC_Start(&__hdac, DAC_CHANNEL_1);
+
+		HAL_DAC_SetValue(&__hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (y_t[0]+620));
+		HAL_ADC_Stop_IT(&adc3);
+		HAL_ADC_Stop_IT(&adc1);
 	}
 }
 
@@ -190,7 +240,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	if(htim->Instance == TIM7)
 	{
-
+		HAL_ADC_Start_IT(&adc1);
+		HAL_ADC_Start_IT(&adc3);
 	}
 		//counter_10++;
 }
