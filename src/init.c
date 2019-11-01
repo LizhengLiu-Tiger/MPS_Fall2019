@@ -66,7 +66,7 @@ void CPU_CACHE_Enable(void) {
   /* Enable I-Cache */
   SCB_EnableICache();
 
-  /* Enable D-Cache priority*/
+  /* Enable D-Cache */
   SCB_EnableDCache();
 }
 
@@ -79,14 +79,14 @@ void Sys_Init(void) {
 
 	/* UART configured as follows:
 		- Word Length = 8 Bits
-		- Stop Bit = 1 Stop bits
+		- Stop Bit = No Stop bits
 		- Parity = None
 		- BaudRate = 115200 baud
 		- Hardware flow control disabled (RTS and CTS signals)
 	*/
 	initUart(&USB_UART, 115200, USART1);
-	initUart(&USB_UART_6, 9600, USART6);
 
+	setbuf(stdout,NULL); // Disable buffering of stdout - printf prints everything immediately
 }
 
 // This function is what makes everything work
