@@ -121,19 +121,20 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
 			HAL_NVIC_SetPriority(SPI2_IRQn,5,5);
 			HAL_NVIC_EnableIRQ(SPI2_IRQn);
 
-			dma2_ADC1.Instance = DMA1_Stream4;
+			dma2_ADC1.Instance = DMA1_Stream0;
 			dma2_ADC1.Init.Channel = DMA_CHANNEL_0;//0 for SPI RX
 			dma2_ADC1.Init.Direction = DMA_PERIPH_TO_MEMORY;
 			dma2_ADC1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-			dma2_ADC1.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE; // ??Enable both sizes?
+			dma2_ADC1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD; // ??Enable both sizes?
 			dma2_ADC1.Init.PeriphInc = DMA_PINC_DISABLE;
 			dma2_ADC1.Init.MemInc = DMA_MINC_ENABLE; // ??Enable or Dis? Both?
 			dma2_ADC1.Init.Mode = DMA_CIRCULAR; //Any more configure?? P
 			dma2_ADC1.Init.Priority = DMA_PRIORITY_HIGH;
+			dma2_ADC1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
 			HAL_DMA_Init(&dma2_ADC1);
 			__HAL_LINKDMA(&adc1, DMA_Handle, dma2_ADC1); // DMA to SPI rx
-			HAL_NVIC_SetPriority(DMA2_Stream4_IRQn,0,0);
-			HAL_NVIC_EnableIRQ(DMA2_Stream4_IRQn);
+			HAL_NVIC_SetPriority(DMA2_Stream0_IRQn,0,0);
+			HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
 			HAL_NVIC_SetPriority(ADC_IRQn,7,7);
 			HAL_NVIC_EnableIRQ(ADC_IRQn);
@@ -283,7 +284,7 @@ void DMA2_Stream2_IRQHandler(void){
 	HAL_DMA_IRQHandler(&hdma_usart1_rx);
 }
 
-void DMA2_Stream4_IRQHandler(void){
+void DMA2_Stream0_IRQHandler(void){
 	HAL_DMA_IRQHandler(&dma2_ADC1);
 }
 
