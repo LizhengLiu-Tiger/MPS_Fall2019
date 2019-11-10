@@ -49,7 +49,7 @@ int main(void)
 		x_t[1] = x_t[0];
 		x_t[2] = temp;
 		//Take ADC input
-		HAL_ADC_Start_DMA(&adc1, x_t[0], 1);
+		HAL_ADC_Start_DMA(&adc1, (uint32_t*)x_t[0], 1);
 
 
 		//Transfer function / filter
@@ -118,9 +118,10 @@ void configureADC()
 	adc1.Init.Resolution = ADC_RESOLUTION_12B;
 	adc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
 	adc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-	adc1.Init.ContinuousConvMode = ENABLE;
+	adc1.Init.ContinuousConvMode = DISABLE;
+	adc1.Init.DiscontinuousConvMode = DISABLE;
 	adc1.Init.DMAContinuousRequests = ENABLE;
-	adc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+	adc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
 
 	HAL_ADC_Init(&adc1); // Initialize the ADC
 
@@ -130,7 +131,7 @@ void configureADC()
 	_ADC1_IN6.Channel = ADC_CHANNEL_6;
 	_ADC1_IN6.Offset = 0;
 	_ADC1_IN6.Rank = ADC_REGULAR_RANK_1;
-	_ADC1_IN6.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+	_ADC1_IN6.SamplingTime = ADC_SAMPLETIME_480CYCLES;
 
 	HAL_ADC_ConfigChannel(&adc1, &_ADC1_IN6);
 
