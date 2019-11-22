@@ -18,8 +18,8 @@ uint8_t y;
 uint8_t buttons[3];
 int direction_x;
 int direction_y;
-int flag_pState;
-int flag_conv;
+int flag_pState;//device ready flag
+int flag_conv;//end of data transmission flag
 
 void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 
@@ -32,14 +32,17 @@ int main(void){
 	// USBH Driver Initialization
 	// USB Driver Class Registrations: Add device types to handle.
 	USBH_RegisterClass(&husbh, &HID_Class);
+
 	// Start USBH Driver
 	USBH_Start(&husbh);
+
 	while(1){
 		USBH_Process(&husbh);
+		//add the end of data transmission flag to prevent too frequent polling of the mouse
 		if (flag_pState && flag_conv)
 		{
 
-			mouse_info = *USBH_HID_GetMouseInfo(&husbh);
+			mouse_info = *USBH_HID_GetMouseInfo(&husbh);//read mouse data
 			flag_conv = 0;
 		}
 		else
@@ -76,17 +79,16 @@ int main(void){
 			printf("The movement of the mouse: Right %d, Up %d\r\n", x, y);
 
 		printf("The button of the mouse: %d, %d, %d\r\n", buttons[0], buttons[1], buttons[2]);
-		// Other stuff
 	}
 }
 
 void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id) {
 	  switch(id)
 	  {
-	  case HOST_USER_DISCONNECTION:
+	  case HOST_USER_DISCONNECTION://device disconnected
 		  flag_pState = 0;
 		  break;
-	  case HOST_USER_CLASS_ACTIVE:
+	  case HOST_USER_CLASS_ACTIVE://device ready to use
 		  flag_pState = 1;
 		  break;
 	  default:
@@ -96,7 +98,7 @@ void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id) {
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef *phost)
 {
-	flag_conv = 1;
+	flag_conv = 1;//end of data transmission
 }
 // Interrupts and Callbacks...
 
