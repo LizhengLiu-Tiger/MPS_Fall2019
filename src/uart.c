@@ -1,4 +1,5 @@
 #include "uart.h"
+#define UART_ADVFEATURE_TXINV_ENABLE        USART_CR2_TXINV
 
 // Initialize Hardware Resources
 // Peripheral's clock enable
@@ -16,7 +17,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
 		GPIO_InitStruct.Pull      = GPIO_PULLUP;
 		GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
 		GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct); //TX Config
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct); //TX Config UART_ADVFEATURE_DATAINV_DISABLE
 
 		// Initialize RX Pin
 		GPIO_InitStruct.Pin = GPIO_PIN_10;
@@ -57,6 +58,50 @@ void initUart(UART_HandleTypeDef* Uhand, uint32_t Baud, USART_TypeDef* Tgt) {
 	Uhand->Init.Parity     = UART_PARITY_NONE;
 	Uhand->Init.Mode       = UART_MODE_TX_RX;
 	Uhand->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+
+//	Uhand->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_TXINVERT_INIT;
+//	Uhand->AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
+
+//	Uhand->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_RXINVERT_INIT;
+//	Uhand->AdvancedInit.RxPinLevelInvert = UART_ADVFEATURE_RXINV_ENABLE;
+
+	HAL_UART_Init(Uhand);
+}
+
+void initUart_1(UART_HandleTypeDef* Uhand, uint32_t Baud, USART_TypeDef* Tgt) {
+	Uhand->Instance        = Tgt;
+
+	Uhand->Init.BaudRate   = Baud;
+	Uhand->Init.WordLength = UART_WORDLENGTH_8B;
+	Uhand->Init.StopBits   = UART_STOPBITS_1;
+	Uhand->Init.Parity     = UART_PARITY_NONE;
+	Uhand->Init.Mode       = UART_MODE_TX_RX;
+	Uhand->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+
+//	Uhand->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_TXINVERT_INIT;
+//	Uhand->AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
+//
+//	Uhand->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_RXINVERT_INIT;
+//	Uhand->AdvancedInit.RxPinLevelInvert = UART_ADVFEATURE_RXINV_ENABLE;
+
+	HAL_UART_Init(Uhand);
+}
+
+void initUart_6(UART_HandleTypeDef* Uhand, uint32_t Baud, USART_TypeDef* Tgt) {
+	Uhand->Instance        = Tgt;
+
+	Uhand->Init.BaudRate   = Baud;
+	Uhand->Init.WordLength = UART_WORDLENGTH_8B;
+	Uhand->Init.StopBits   = UART_STOPBITS_1;
+	Uhand->Init.Parity     = UART_PARITY_NONE;
+	Uhand->Init.Mode       = UART_MODE_TX_RX;
+	Uhand->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+
+	Uhand->AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_TXINVERT_INIT;
+	Uhand->AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
+
+	Uhand->AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_RXINVERT_INIT;
+	Uhand->AdvancedInit.RxPinLevelInvert = UART_ADVFEATURE_RXINV_ENABLE;
 
 	HAL_UART_Init(Uhand);
 }
@@ -113,10 +158,20 @@ char uart_getchar(UART_HandleTypeDef *huart, uint8_t echo) {
 	if (echo) HAL_UART_Transmit(huart, (uint8_t*) input, 1, 1000);
 	return (char)input[0];
 }
+char uart_getchar_IT(UART_HandleTypeDef *huart, uint8_t echo) {
+	char input[1];
+	HAL_UART_Receive_IT(huart, (uint8_t *)input, 1);
+	if (echo) HAL_UART_Transmit(huart, (uint8_t*) input, 1, 1000);
+	return (char)input[0];
+}
 
 // Send one character
 void uart_putchar(UART_HandleTypeDef *huart, char * input) {
 	HAL_UART_Transmit(huart, (uint8_t*) input, 1, 1000);
+}
+
+void uart_putchar_IT(UART_HandleTypeDef *huart, char * input) {
+	HAL_UART_Transmit_IT(huart, (uint8_t*) input, 1);
 }
 
 // Collects characters until size limit or an endline is recieved
